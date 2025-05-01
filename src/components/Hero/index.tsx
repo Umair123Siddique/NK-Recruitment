@@ -241,36 +241,23 @@ const Hero = () => {
       </div>
 
       {/* Carousel Controls */}
-      <div className="absolute left-20 bottom-10 z-20 flex space-x-2">
+      <div className="absolute bottom-4 left-4 z-20 flex space-x-2 sm:bottom-6 sm:left-10 md:bottom-10 md:left-20">
         <button
           onClick={prevSlide}
           className="rounded-full bg-white/20 p-2 backdrop-blur-sm transition-colors hover:bg-white/40"
           aria-label="Previous slide"
         >
-          <ChevronLeft className="h-8 w-8 text-white" />
+          <ChevronLeft className="h-6 w-6 text-white sm:h-7 sm:w-7 md:h-8 md:w-8" />
         </button>
-        {/* <button
-          onClick={nextSlide}
-          className="rounded-full bg-white/20 p-2 backdrop-blur-sm transition-colors hover:bg-white/40"
-          aria-label="Next slide"
-        >
-          <ChevronRight className="h-8 w-8 text-white" />
-        </button> */}
       </div>
-      <div className="absolute right-20 bottom-10 z-20 flex space-x-2">
-        {/* <button
-          onClick={prevSlide}
-          className="rounded-full bg-white/20 p-2 backdrop-blur-sm transition-colors hover:bg-white/40"
-          aria-label="Previous slide"
-        >
-          <ChevronLeft className="h-8 w-8 text-white" />
-        </button> */}
+
+      <div className="absolute right-4 bottom-4 z-20 flex space-x-2 sm:right-10 sm:bottom-6 md:right-20 md:bottom-10">
         <button
           onClick={nextSlide}
           className="rounded-full bg-white/20 p-2 backdrop-blur-sm transition-colors hover:bg-white/40"
           aria-label="Next slide"
         >
-          <ChevronRight className="h-8 w-8 text-white" />
+          <ChevronRight className="h-6 w-6 text-white sm:h-7 sm:w-7 md:h-8 md:w-8" />
         </button>
       </div>
 
@@ -292,62 +279,62 @@ const Hero = () => {
 
       {/* Content */}
       <div className="flex justify-start">
-      <div className="relative z-10 container">
-        <motion.div
-          className="-mx-4 flex flex-wrap"
-          initial="hidden"
-          animate="visible"
-          variants={staggerChildren}
-        >
-          <div className="w-full px-4">
-            <div className="mx-auto max-w-[800px] text-center">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={`content-${currentSlide}`}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  variants={fadeIn}
-                >
-                  {/* Tagline */}
-                  <motion.p className="text-green-400 mb-2 text-sm font-semibold sm:text-base">
-                    {slides[currentSlide].tagline}
-                  </motion.p>
-
-                  {/* Heading */}
-                  <motion.h1 className="mb-5 text-5xl leading-tight font-bold text-primary sm:text-4xl sm:leading-tight md:text-5xl md:leading-tight">
-                    {slides[currentSlide].heading}
-                  </motion.h1>
-
-                  {/* Description */}
-                  <motion.p className="mb-8 text-base leading-relaxed text-white/90 sm:text-lg md:text-xl">
-                    {slides[currentSlide].description}
-                  </motion.p>
-
-                  {/* Buttons Container - Moved Here */}
+        <div className="relative z-10 container">
+          <motion.div
+            className="-mx-4 flex flex-wrap"
+            initial="hidden"
+            animate="visible"
+            variants={staggerChildren}
+          >
+            <div className="w-full px-4">
+              <div className="mx-auto max-w-[800px] text-center">
+                <AnimatePresence mode="wait">
                   <motion.div
-                    className="flex flex-col items-center justify-center space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4"
+                    key={`content-${currentSlide}`}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
                     variants={fadeIn}
                   >
-                    <Link
-                      href={slides[currentSlide].buttons.primary.link}
-                      className="bg-primary hover:bg-primary/80 rounded-md px-8 py-3 text-base font-semibold text-white duration-300 ease-in-out sm:px-10 sm:py-4"
+                    {/* Tagline */}
+                    <motion.p className="mb-2 text-sm font-semibold text-green-400 sm:text-base">
+                      {slides[currentSlide].tagline}
+                    </motion.p>
+
+                    {/* Heading */}
+                    <motion.h1 className="text-primary mb-5 text-5xl leading-tight font-bold sm:text-4xl sm:leading-tight md:text-5xl md:leading-tight">
+                      {slides[currentSlide].heading}
+                    </motion.h1>
+
+                    {/* Description */}
+                    <motion.p className="mb-8 text-base leading-relaxed text-white/90 sm:text-lg md:text-xl">
+                      {slides[currentSlide].description}
+                    </motion.p>
+
+                    {/* Buttons Container - Moved Here */}
+                    <motion.div
+                      className="flex flex-col items-center justify-center space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4"
+                      variants={fadeIn}
                     >
-                      {slides[currentSlide].buttons.primary.text}
-                    </Link>
-                    <Link
-                      href={slides[currentSlide].buttons.secondary.link}
-                      className="inline-block rounded-md border-2 border-white bg-transparent px-8 py-3 text-base font-semibold text-white duration-300 ease-in-out hover:bg-white/10 sm:px-10 sm:py-4"
-                    >
-                      {slides[currentSlide].buttons.secondary.text}
-                    </Link>
+                      <Link
+                        href={slides[currentSlide].buttons.primary.link}
+                        className="bg-primary hover:bg-primary/80 rounded-md px-8 py-3 text-base font-semibold text-white duration-300 ease-in-out sm:px-10 sm:py-4"
+                      >
+                        {slides[currentSlide].buttons.primary.text}
+                      </Link>
+                      <Link
+                        href={slides[currentSlide].buttons.secondary.link}
+                        className="inline-block rounded-md border-2 border-white bg-transparent px-8 py-3 text-base font-semibold text-white duration-300 ease-in-out hover:bg-white/10 sm:px-10 sm:py-4"
+                      >
+                        {slides[currentSlide].buttons.secondary.text}
+                      </Link>
+                    </motion.div>
                   </motion.div>
-                </motion.div>
-              </AnimatePresence>
+                </AnimatePresence>
+              </div>
             </div>
-          </div>
-        </motion.div>
-      </div>
+          </motion.div>
+        </div>
       </div>
     </section>
   );
