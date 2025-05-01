@@ -235,26 +235,42 @@ const Hero = () => {
               className="object-cover object-center"
               priority={currentSlide === 0}
             />
-            <div className="absolute inset-0 bg-black/50" />
+            <div className="absolute inset-0 bg-black/30" />
           </motion.div>
         </AnimatePresence>
       </div>
 
       {/* Carousel Controls */}
-      <div className="absolute right-10 bottom-10 z-20 flex space-x-2">
+      <div className="absolute left-20 bottom-10 z-20 flex space-x-2">
         <button
           onClick={prevSlide}
           className="rounded-full bg-white/20 p-2 backdrop-blur-sm transition-colors hover:bg-white/40"
           aria-label="Previous slide"
         >
-          <ChevronLeft className="h-6 w-6 text-white" />
+          <ChevronLeft className="h-8 w-8 text-white" />
         </button>
+        {/* <button
+          onClick={nextSlide}
+          className="rounded-full bg-white/20 p-2 backdrop-blur-sm transition-colors hover:bg-white/40"
+          aria-label="Next slide"
+        >
+          <ChevronRight className="h-8 w-8 text-white" />
+        </button> */}
+      </div>
+      <div className="absolute right-20 bottom-10 z-20 flex space-x-2">
+        {/* <button
+          onClick={prevSlide}
+          className="rounded-full bg-white/20 p-2 backdrop-blur-sm transition-colors hover:bg-white/40"
+          aria-label="Previous slide"
+        >
+          <ChevronLeft className="h-8 w-8 text-white" />
+        </button> */}
         <button
           onClick={nextSlide}
           className="rounded-full bg-white/20 p-2 backdrop-blur-sm transition-colors hover:bg-white/40"
           aria-label="Next slide"
         >
-          <ChevronRight className="h-6 w-6 text-white" />
+          <ChevronRight className="h-8 w-8 text-white" />
         </button>
       </div>
 
@@ -275,7 +291,7 @@ const Hero = () => {
       </div>
 
       {/* Content */}
-
+      <div className="flex justify-start">
       <div className="relative z-10 container">
         <motion.div
           className="-mx-4 flex flex-wrap"
@@ -294,12 +310,12 @@ const Hero = () => {
                   variants={fadeIn}
                 >
                   {/* Tagline */}
-                  <motion.p className="text-primary mb-2 text-sm font-semibold sm:text-base">
+                  <motion.p className="text-green-400 mb-2 text-sm font-semibold sm:text-base">
                     {slides[currentSlide].tagline}
                   </motion.p>
 
                   {/* Heading */}
-                  <motion.h1 className="mb-5 text-3xl leading-tight font-bold text-white sm:text-4xl sm:leading-tight md:text-5xl md:leading-tight">
+                  <motion.h1 className="mb-5 text-5xl leading-tight font-bold text-primary sm:text-4xl sm:leading-tight md:text-5xl md:leading-tight">
                     {slides[currentSlide].heading}
                   </motion.h1>
 
@@ -331,6 +347,7 @@ const Hero = () => {
             </div>
           </div>
         </motion.div>
+      </div>
       </div>
     </section>
   );

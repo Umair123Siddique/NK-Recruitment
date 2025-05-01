@@ -14,12 +14,12 @@ const Header = () => {
   };
 
   // Sticky Navbar
-  const [sticky, setSticky] = useState(false);
+  const [sticky, setSticky] = useState(true);
   const handleStickyNavbar = () => {
     if (window.scrollY >= 80) {
       setSticky(true);
     } else {
-      setSticky(false);
+      setSticky(true);
     }
   };
   useEffect(() => {
@@ -52,27 +52,33 @@ const Header = () => {
             <div className="w-60 max-w-full px-4 xl:mr-12">
               <Link
                 href="/"
-                className={`header-logo block w-full ${
-                  sticky ? "py-5 lg:py-2" : "py-8"
-                } `}
+                // className={`header-logo block w-full ${
+                //   sticky ? "py-2 lg:py-2" : "py-2"
+                // } `}
               >
+                <div className="flex gap-2 items-center">
                 <Image
-                  src="/images/logo/logo-2.svg"
+                  src="/images/logo/nk-logo.png"
                   alt="logo"
-                  width={140}
-                  height={30}
-                  className="w-full dark:hidden"
+                  width={70}
+                  height={40}
+                  // className="w-full dark:hidden"
                 />
-                <Image
-                  src="/images/logo/logo.svg"
+                <div>
+                <div className="text-[#1869A3] text-xl font-bold">RECRUITMENT </div>
+                <div className="text-[#1869A3] text-[10px] font-bold">YOUR FUTURE, OUR MISSION</div>
+                </div>
+                {/* <Image
+                  src="/images/logo/recruitment-logo-resize.png"
                   alt="logo"
-                  width={140}
+                  width={100}
                   height={30}
-                  className="hidden w-full dark:block"
-                />
+                  // className="hidden w-full dark:block"
+                /> */}
+                </div>
               </Link>
             </div>
-            <div className="flex w-full items-center justify-between px-4">
+            <div className="flex w-full items-center justify-between px-8">
               <div>
                 <button
                   onClick={navbarToggleHandler}
@@ -159,7 +165,7 @@ const Header = () => {
                 </nav>
               </div>
               <div className="flex items-center justify-end pr-16 lg:pr-0">
-                <Link
+                {/* <Link
                   href="/signin"
                   className="text-dark hidden px-7 py-3 text-base font-medium hover:opacity-70 md:block dark:text-white"
                 >
@@ -167,13 +173,13 @@ const Header = () => {
                 </Link>
                 <Link
                   href="/signup"
-                  className="ease-in-up shadow-btn hover:shadow-btn-hover bg-primary hover:bg-primary/90 hidden rounded-xs px-8 py-3 text-base font-medium text-white transition duration-300 md:block md:px-9 lg:px-6 xl:px-9"
+                  className="ease-in-up shadow-btn hover:shadow-btn-hover bg-primary hover:bg-primary/90 hidden rounded-md px-8 py-3 text-base font-medium text-white transition duration-300 md:block md:px-9 lg:px-6 xl:px-9"
                 >
                   Sign Up
-                </Link>
-                <div>
+                </Link> */}
+                {/* <div>
                   <ThemeToggler />
-                </div>
+                </div> */}
               </div>
             </div>
           </div>

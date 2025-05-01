@@ -1,3 +1,4 @@
+import AboutSection from "@/components/About/AboutSection";
 import AboutSectionOne from "@/components/About/AboutSectionOne";
 import AboutSectionTwo from "@/components/About/AboutSectionTwo";
 import Breadcrumb from "@/components/Common/Breadcrumb";
@@ -13,12 +14,21 @@ export const metadata: Metadata = {
 const AboutPage = () => {
   return (
     <>
-      <Breadcrumb
+      {/* <Breadcrumb
         pageName="About Page"
-        description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. In varius eros eget sapien consectetur ultrices. Ut quis dapibus libero."
-      />
-      <AboutSectionOne />
-      <AboutSectionTwo />
+        description=""
+      /> */}
+      {/* <AboutSectionOne />
+      <AboutSectionTwo /> */}
+      <div className="pt-32 pb-12 bg-primary">
+        <div className="container mx-auto px-4">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white text-center">About Us</h1>
+          <p className="text-white/90 text-lg md:text-xl text-center mt-4 max-w-3xl mx-auto">
+          Our professionals driving NK Recruitments mission to connect talent with opportunity across the globe.
+          </p>
+        </div>
+      </div>
+      <AboutSection/>
     </>
   );
 };

@@ -10,10 +10,19 @@ import Pricing from "@/components/Pricing";
 import Testimonials from "@/components/Testimonials";
 import Video from "@/components/Video";
 import { Metadata } from "next";
+import AboutPage from "./about/page";
+import AboutSection from "@/components/About/AboutSection";
+import ServicesSection from "@/components/Services/ServicesSection";
+import StatsSection from "@/components/Stats/StatSection";
+import ProcessSection from "@/components/Process/ProcessSection";
+import TestimonialsSection from "@/components/Testimonials/TestimonialSection";
+import CTASection from "@/components/CTA/CtaSection";
+import ContactSection from "@/components/Contact/ContactSection";
+import FAQSection from "@/components/Faq/FaqSection";
 
 export const metadata: Metadata = {
-  title: "Free Next.js Template for Startup and SaaS",
-  description: "This is Home for Startup Nextjs Template",
+  title: "NK Recruitment",
+  description: "Your future aur mission",
   // other metadata
 };
 
@@ -22,7 +31,15 @@ export default function Home() {
     <>
       <ScrollUp />
       <Hero />
-      <Features />
+      <AboutSection/>
+      <ServicesSection/>
+      <StatsSection/>
+      <ProcessSection/>
+      <TestimonialsSection/>
+      <FAQSection/>
+      <CTASection/>
+      <ContactSection/>
+      {/* <Features />
       <Video />
       <Brands />
       <AboutSectionOne />
@@ -30,7 +47,7 @@ export default function Home() {
       <Testimonials />
       <Pricing />
       <Blog />
-      <Contact />
+      <Contact /> */}
     </>
   );
 }
