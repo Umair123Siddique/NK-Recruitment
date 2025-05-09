@@ -1,77 +1,29 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useAuth } from "./auth-provider"
+import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
+import { signOut } from "next-auth/react"
 
-// Mock data for applications
-const mockApplications = [
-  {
-    id: 1,
-    fullName: "John Smith",
-    email: "john.smith@example.com",
-    phone: "+1 (555) 123-4567",
-    position: "Software Developer",
-    education: "Bachelor of Science in Computer Science, Stanford University",
-    experience: "5 years at Tech Solutions Inc. as a Full Stack Developer",
-    skills: "JavaScript, React, Node.js, Python, SQL",
-    submittedAt: "2023-05-15T10:30:00Z",
-    status: "New",
-    cvFilename: "john_smith_resume.pdf",
-  },
-  {
-    id: 2,
-    fullName: "Emily Johnson",
-    email: "emily.johnson@example.com",
-    phone: "+1 (555) 987-6543",
-    position: "Marketing Specialist",
-    education: "Master of Business Administration, NYU",
-    experience: "3 years at Global Marketing Agency as a Digital Marketing Coordinator",
-    skills: "Social Media Marketing, Content Creation, SEO, Google Analytics, Adobe Creative Suite",
-    submittedAt: "2023-05-14T14:45:00Z",
-    status: "Reviewed",
-    cvFilename: "emily_johnson_cv.pdf",
-  },
-  {
-    id: 3,
-    fullName: "Michael Chen",
-    email: "michael.chen@example.com",
-    phone: "+1 (555) 234-5678",
-    position: "Data Analyst",
-    education: "Master of Science in Data Science, MIT",
-    experience: "2 years at Data Insights Corp as a Junior Data Analyst",
-    skills: "Python, R, SQL, Tableau, Machine Learning, Statistical Analysis",
-    submittedAt: "2023-05-13T09:15:00Z",
-    status: "Contacted",
-    cvFilename: "michael_chen_resume.pdf",
-  },
-  {
-    id: 4,
-    fullName: "Sarah Williams",
-    email: "sarah.williams@example.com",
-    phone: "+1 (555) 345-6789",
-    position: "UX/UI Designer",
-    education: "Bachelor of Fine Arts in Graphic Design, RISD",
-    experience: "4 years at Creative Design Studio as a UI Designer",
-    skills: "Figma, Sketch, Adobe XD, Photoshop, Illustrator, User Research, Prototyping",
-    submittedAt: "2023-05-12T16:20:00Z",
-    status: "Interviewed",
-    cvFilename: "sarah_williams_portfolio.pdf",
-  },
-  {
-    id: 5,
-    fullName: "David Rodriguez",
-    email: "david.rodriguez@example.com",
-    phone: "+1 (555) 456-7890",
-    position: "Financial Analyst",
-    education: "Bachelor of Science in Finance, University of Pennsylvania",
-    experience: "3 years at Global Investments Inc. as a Junior Financial Analyst",
-    skills: "Financial Modeling, Excel, Bloomberg Terminal, Valuation, Financial Statement Analysis",
-    submittedAt: "2023-05-11T11:10:00Z",
-    status: "New",
-    cvFilename: "david_rodriguez_resume.pdf",
-  },
-]
+// Types for application data
+interface Application {
+  _id: string
+  fullName: string
+  email: string
+  phone: string
+  position: string
+  education: string
+  experience: string
+  skills: string
+  status: string
+  submittedAt: string
+  cvFile: {
+    filename: string
+    originalName: string
+    size: number
+    mimetype: string
+  }
+}
 
 // Status color mapping
 const statusColors: Record<string, string> = {
@@ -84,33 +36,64 @@ const statusColors: Record<string, string> = {
 }
 
 const AdminDashboard = () => {
-  const { isAuthenticated, logout } = useAuth()
+  const { data: session, status } = useSession()
   const router = useRouter()
-  const [applications, setApplications] = useState(mockApplications)
+  const [applications, setApplications] = useState<Application[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("All")
   const [positionFilter, setPositionFilter] = useState("All")
-  const [selectedApplication, setSelectedApplication] = useState<any>(null)
+  const [selectedApplication, setSelectedApplication] = useState<Application | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
-
-  // Get unique positions for filter
-  const positions = ["All", ...Array.from(new Set(applications.map((app) => app.position)))]
-
-  // Get unique statuses for filter
-  const statuses = ["All", ...Array.from(new Set(applications.map((app) => app.status)))]
-
-  // Filter applications based on search term and filters
-  const filteredApplications = applications.filter((app) => {
-    const matchesSearch =
-      app.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.position.toLowerCase().includes(searchTerm.toLowerCase())
-
-    const matchesStatus = statusFilter === "All" || app.status === statusFilter
-    const matchesPosition = positionFilter === "All" || app.position === positionFilter
-
-    return matchesSearch && matchesStatus && matchesPosition
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [positions, setPositions] = useState<string[]>(["All"])
+  const [statuses, setStatuses] = useState<string[]>(["All"])
+  const [pagination, setPagination] = useState({
+    total: 0,
+    page: 1,
+    limit: 10,
+    pages: 1,
   })
+
+  // Fetch applications data
+  const fetchApplications = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch(
+        `/api/applications?search=${searchTerm}&status=${statusFilter}&position=${positionFilter}&page=${pagination.page}&limit=${pagination.limit}`,
+      )
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch applications")
+      }
+
+      const data = await response.json()
+      setApplications(data.applications)
+      setPagination(data.pagination)
+
+      // Set filter options if available
+      if (data.filters) {
+        setPositions(["All", ...data.filters.positions])
+        setStatuses(["All", ...data.filters.statuses])
+      }
+
+      setError("")
+    } catch (err: any) {
+      setError(err.message || "An error occurred while fetching applications")
+      console.error(err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Initial data fetch
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetchApplications()
+    } else if (status === "unauthenticated") {
+      router.push("/admin/login")
+    }
+  }, [status, router, pagination.page, searchTerm, statusFilter, positionFilter])
 
   // Format date
   const formatDate = (dateString: string) => {
@@ -125,31 +108,75 @@ const AdminDashboard = () => {
   }
 
   // View application details
-  const viewApplicationDetails = (application: any) => {
+  const viewApplicationDetails = (application: Application) => {
     setSelectedApplication(application)
     setIsDetailModalOpen(true)
   }
 
   // Update application status
-  const updateApplicationStatus = (id: number, newStatus: string) => {
-    setApplications((prevApplications) =>
-      prevApplications.map((app) => (app.id === id ? { ...app, status: newStatus } : app)),
-    )
+  const updateApplicationStatus = async (id: string, newStatus: string) => {
+    try {
+      const response = await fetch(`/api/applications/${id}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: newStatus }),
+      })
 
-    if (selectedApplication && selectedApplication.id === id) {
-      setSelectedApplication({ ...selectedApplication, status: newStatus })
+      if (!response.ok) {
+        throw new Error("Failed to update status")
+      }
+
+      // Update local state
+      setApplications((prevApplications) =>
+        prevApplications.map((app) => (app._id === id ? { ...app, status: newStatus } : app)),
+      )
+
+      if (selectedApplication && selectedApplication._id === id) {
+        setSelectedApplication({ ...selectedApplication, status: newStatus })
+      }
+    } catch (err) {
+      console.error("Error updating status:", err)
+      alert("Failed to update status. Please try again.")
     }
   }
 
-  // Check if user is authenticated
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/admin/login")
+  // Download CV
+  const downloadCV = async (id: string) => {
+    try {
+      window.open(`/api/applications/${id}/download`, "_blank")
+    } catch (err) {
+      console.error("Error downloading CV:", err)
+      alert("Failed to download CV. Please try again.")
     }
-  }, [isAuthenticated, router])
+  }
 
-  if (!isAuthenticated) {
-    return null
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-center">
+          <svg
+            className="animate-spin h-10 w-10 text-primary mx-auto mb-4"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (status === "unauthenticated") {
+    return null // Will redirect in useEffect
   }
 
   return (
@@ -159,7 +186,7 @@ const AdminDashboard = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900">NK Recruitment Admin</h1>
           <button
-            onClick={logout}
+            onClick={() => signOut({ callbackUrl: "/admin/login" })}
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
           >
             Logout
@@ -231,144 +258,183 @@ const AdminDashboard = () => {
             </div>
           </div>
 
+          {/* Error Message */}
+          {error && (
+            <div className="p-6 bg-red-50 border-b border-red-200">
+              <p className="text-red-600">{error}</p>
+            </div>
+          )}
+
+          {/* Loading State */}
+          {isLoading && (
+            <div className="p-6 text-center">
+              <svg
+                className="animate-spin h-8 w-8 text-primary mx-auto mb-4"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              <p className="text-gray-600">Loading applications...</p>
+            </div>
+          )}
+
           {/* Applications Table */}
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Candidate
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Position
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Submitted
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Status
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredApplications.length > 0 ? (
-                  filteredApplications.map((application) => (
-                    <tr key={application.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center">
-                            <span className="text-primary font-medium">
-                              {application.fullName
-                                .split(" ")
-                                .map((n: string) => n[0])
-                                .join("")}
-                            </span>
+          {!isLoading && (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Candidate
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Position
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Submitted
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Status
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {applications.length > 0 ? (
+                    applications.map((application) => (
+                      <tr key={application._id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center">
+                              <span className="text-primary font-medium">
+                                {application.fullName
+                                  .split(" ")
+                                  .map((n: string) => n[0])
+                                  .join("")}
+                              </span>
+                            </div>
+                            <div className="ml-4">
+                              <div className="text-sm font-medium text-gray-900">{application.fullName}</div>
+                              <div className="text-sm text-gray-500">{application.email}</div>
+                            </div>
                           </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">{application.fullName}</div>
-                            <div className="text-sm text-gray-500">{application.email}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{application.position}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{formatDate(application.submittedAt)}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            statusColors[application.status] || "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {application.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => viewApplicationDetails(application)}
-                          className="text-primary hover:text-primary/80 mr-4"
-                        >
-                          View
-                        </button>
-                        <a
-                          href="#"
-                          className="text-gray-600 hover:text-gray-900"
-                          onClick={(e) => {
-                            e.preventDefault()
-                            // In a real app, this would download the CV file
-                            alert(`Downloading ${application.cvFilename}`)
-                          }}
-                        >
-                          Download CV
-                        </a>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{application.position}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{formatDate(application.submittedAt)}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span
+                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              statusColors[application.status] || "bg-gray-100 text-gray-800"
+                            }`}
+                          >
+                            {application.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <button
+                            onClick={() => viewApplicationDetails(application)}
+                            className="text-primary hover:text-primary/80 mr-4"
+                          >
+                            View
+                          </button>
+                          <button
+                            onClick={() => downloadCV(application._id)}
+                            className="text-gray-600 hover:text-gray-900"
+                          >
+                            Download CV
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                        No applications found matching your filters.
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
-                      No applications found matching your filters.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
 
-          {/* Pagination (simplified) */}
-          <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm text-gray-700">
-                  Showing <span className="font-medium">1</span> to{" "}
-                  <span className="font-medium">{filteredApplications.length}</span> of{" "}
-                  <span className="font-medium">{filteredApplications.length}</span> results
-                </p>
-              </div>
-              <div>
-                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                  <a
-                    href="#"
-                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                  >
-                    Previous
-                  </a>
-                  <a
-                    href="#"
-                    className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
-                  >
-                    1
-                  </a>
-                  <a
-                    href="#"
-                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                  >
-                    Next
-                  </a>
-                </nav>
+          {/* Pagination */}
+          {!isLoading && applications.length > 0 && (
+            <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+              <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm text-gray-700">
+                    Showing <span className="font-medium">{(pagination.page - 1) * pagination.limit + 1}</span> to{" "}
+                    <span className="font-medium">
+                      {Math.min(pagination.page * pagination.limit, pagination.total)}
+                    </span>{" "}
+                    of <span className="font-medium">{pagination.total}</span> results
+                  </p>
+                </div>
+                <div>
+                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    <button
+                      onClick={() => setPagination({ ...pagination, page: Math.max(1, pagination.page - 1) })}
+                      disabled={pagination.page === 1}
+                      className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Previous
+                    </button>
+                    {[...Array(pagination.pages)].map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setPagination({ ...pagination, page: i + 1 })}
+                        className={`relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium ${
+                          pagination.page === i + 1
+                            ? "text-primary bg-primary/10 z-10"
+                            : "text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() =>
+                        setPagination({ ...pagination, page: Math.min(pagination.pages, pagination.page + 1) })
+                      }
+                      disabled={pagination.page === pagination.pages}
+                      className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Next
+                    </button>
+                  </nav>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </main>
 
@@ -426,9 +492,12 @@ const AdminDashboard = () => {
                         <div>
                           <h4 className="text-sm font-medium text-gray-500">CV File</h4>
                           <p className="mt-1 text-sm text-gray-900">
-                            <a href="#" className="text-primary hover:underline">
-                              {selectedApplication.cvFilename}
-                            </a>
+                            <button
+                              onClick={() => downloadCV(selectedApplication._id)}
+                              className="text-primary hover:underline"
+                            >
+                              {selectedApplication.cvFile.originalName}
+                            </button>
                           </p>
                         </div>
                       </div>
@@ -455,7 +524,7 @@ const AdminDashboard = () => {
                         {["New", "Reviewed", "Contacted", "Interviewed", "Rejected", "Hired"].map((status) => (
                           <button
                             key={status}
-                            onClick={() => updateApplicationStatus(selectedApplication.id, status)}
+                            onClick={() => updateApplicationStatus(selectedApplication._id, status)}
                             className={`px-3 py-1 text-xs font-medium rounded-full ${
                               selectedApplication.status === status
                                 ? `${statusColors[status]} ring-2 ring-offset-2 ring-primary/50`
@@ -481,10 +550,7 @@ const AdminDashboard = () => {
                 <button
                   type="button"
                   className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                  onClick={() => {
-                    // In a real app, this would download the CV file
-                    alert(`Downloading ${selectedApplication.cvFilename}`)
-                  }}
+                  onClick={() => downloadCV(selectedApplication._id)}
                 >
                   Download CV
                 </button>
